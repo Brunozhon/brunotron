@@ -1,6 +1,7 @@
 import sdl2
 import sdl2.ext
 import sdl2.sdlttf
+import brunoviews as bv
 
 # Initialize SDL and TTF
 sdl2.ext.init()
@@ -10,17 +11,12 @@ window.show()
 renderer = sdl2.ext.Renderer(window)
 
 # Important colors
-WHITE = sdl2.SDL_Color(255, 255, 255)
-BLACK = sdl2.SDL_Color(0, 0, 0)
-
-PRIMARY = sdl2.SDL_Color(48, 213, 200)
-SECONDARY = sdl2.SDL_Color(10, 186, 181)
 
 # The font
 font = sdl2.sdlttf.TTF_OpenFont(b"pixel-letters.ttf", 16)
 
 # Renders text onto the display
-def render_text(text, x, y, color=WHITE):
+def render_text(text, x, y, color=bv.WHITE):
     surface = sdl2.sdlttf.TTF_RenderText_Solid(font, text.encode(), color)
     texture = sdl2.SDL_CreateTextureFromSurface(renderer.sdlrenderer, surface)
     text_rect = sdl2.SDL_Rect(x, y, surface.contents.w, surface.contents.h)
@@ -28,10 +24,7 @@ def render_text(text, x, y, color=WHITE):
     sdl2.SDL_RenderCopy(renderer.sdlrenderer, texture, None, text_rect)
     sdl2.SDL_DestroyTexture(texture)
 
-def draw_menu_bar():
-    renderer.fill(sdl2.SDL_Rect(0, 0, 512, 30), SECONDARY)
-    render_text("Placeholder", 7, 10)
-
+button = bv.Button(10, 10, 50, 15, "Button")
 running = True
 while running:
     events = sdl2.ext.get_events()
@@ -41,7 +34,7 @@ while running:
 
     renderer.clear()
 
-    draw_menu_bar()
+    button.draw(renderer, font)
 
     renderer.present()
 
