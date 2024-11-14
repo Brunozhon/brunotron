@@ -1,3 +1,5 @@
+"""The UI system for the Brunotron."""
+
 import sdl2
 import sdl2.ext
 import sdl2.sdlttf
@@ -13,15 +15,37 @@ SECONDARY = sdl2.SDL_Color(10, 186, 181)
 def default_callback(): pass
 
 class View(ABC):
+    """The base view class.
+
+    **Do not use this class.**
+    """
+
     @abstractmethod
     def draw(self, renderer: sdl2.ext.Renderer, font: sdl2.sdlttf.TTF_Font) -> None:
+        """Draws the view onto the screen.
+
+        :param renderer: An SDL renderer.
+        :param font: An SDL font.
+        """
         pass
 
     @abstractmethod
-    def is_clicked(self, x: int, y: int) -> bool:
+    def check_clicked(self, x: int, y: int) -> bool:
+        """Returns ``true`` if the view is clicked.
+
+        You should not call this function; it will be handled automatically every frame. If you
+        are sure that your view will never need to handle click events, you can make this function
+        return ``false``.
+
+        :param x: The x position of the cursor.
+        :param y: The y position of the cursor.
+        :return: If the view is clicked.
+        """
         return False
 
 class Button(View):
+    """A class for drawing button views."""
+
     def __init__(self, x: int, y: int, width: int, height: int, label: str,
                  color: sdl2.SDL_Color = SECONDARY, text_color: sdl2.SDL_Color = WHITE,
                  callback: Callable[[], None] = default_callback):
@@ -45,5 +69,13 @@ class Button(View):
         sdl2.SDL_RenderCopy(renderer.sdlrenderer, texture, None, text_rect)
         sdl2.SDL_DestroyTexture(texture)
 
-    def is_clicked(self, x: int, y: int) -> bool:
+    def check_clicked(self, x: int, y: int) -> bool:
+        """Returns true if the button is clicked.
+
+        You should not call this function; it will be handled automatically every frame.
+
+        :param x: The x position of the cursor.
+        :param y: The y position of the cursor.
+        :return: If the view is clicked.
+        """
         return False
