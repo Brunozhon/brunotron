@@ -24,17 +24,23 @@ def render_text(text, x, y, color=bv.WHITE):
     sdl2.SDL_RenderCopy(renderer.sdlrenderer, texture, None, text_rect)
     sdl2.SDL_DestroyTexture(texture)
 
-button = bv.Button(10, 10, 50, 15, "Button")
+button = bv.Button(10, 10, 50, 15, "Button", callback=bv.test_callback)
+text = bv.Text(10, 30, "Hello, world!")
 running = True
 while running:
     events = sdl2.ext.get_events()
     for event in events:
         if event.type == sdl2.SDL_QUIT:
             running = False
+        elif event.type == sdl2.SDL_MOUSEBUTTONDOWN:
+            x, y = event.button.x, event.button.y
+            print(x, y)
+            button.check_clicked(x, y)
 
     renderer.clear()
 
     button.draw(renderer, font)
+    text.draw(renderer, font)
 
     renderer.present()
 
