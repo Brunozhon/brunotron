@@ -6,11 +6,28 @@ import sdl2.sdlttf
 from abc import ABC, abstractmethod
 from typing import Callable
 
+#  ██████   ███████  ██        ███████  ████████   ██████
+# ██    ██ ██     ██ ██       ██     ██ ██     ██ ██    ██
+# ██       ██     ██ ██       ██     ██ ██     ██ ██
+# ██       ██     ██ ██       ██     ██ ████████   ██████
+# ██       ██     ██ ██       ██     ██ ██   ██         ██
+# ██    ██ ██     ██ ██       ██     ██ ██    ██  ██    ██
+#  ██████   ███████  ████████  ███████  ██     ██  ██████
+
 WHITE = sdl2.SDL_Color(255, 255, 255)
 BLACK = sdl2.SDL_Color(0, 0, 0)
 
 PRIMARY = sdl2.SDL_Color(48, 213, 200)
 SECONDARY = sdl2.SDL_Color(10, 186, 181)
+TERTIARY = sdl2.SDL_Color(0, 139, 139)
+
+# ████████ ██     ██ ██    ██  ██████  ████████ ████  ███████  ██    ██  ██████
+# ██       ██     ██ ███   ██ ██    ██    ██     ██  ██     ██ ███   ██ ██    ██
+# ██       ██     ██ ████  ██ ██          ██     ██  ██     ██ ████  ██ ██
+# ██████   ██     ██ ██ ██ ██ ██          ██     ██  ██     ██ ██ ██ ██  ██████
+# ██       ██     ██ ██  ████ ██          ██     ██  ██     ██ ██  ████       ██
+# ██       ██     ██ ██   ███ ██    ██    ██     ██  ██     ██ ██   ███ ██    ██
+# ██        ███████  ██    ██  ██████     ██    ████  ███████  ██    ██  ██████
 
 def default_callback():
     """The default callback for a button. Does nothing."""
@@ -19,6 +36,14 @@ def default_callback():
 def test_callback():
     """The test callback for a button. Prints \"You clicked me!\" when called."""
     print("You clicked me!")
+
+# ██     ██ ████ ████████ ██      ██  ██████
+# ██     ██  ██  ██       ██  ██  ██ ██    ██
+# ██     ██  ██  ██       ██  ██  ██ ██
+# ██     ██  ██  ██████   ██  ██  ██  ██████
+#  ██   ██   ██  ██       ██  ██  ██       ██
+#   ██ ██    ██  ██       ██  ██  ██ ██    ██
+#    ███    ████ ████████  ███  ███   ██████
 
 class View(ABC):
     """The base view class.
@@ -66,6 +91,8 @@ class View(ABC):
         """
         self.x += x
         self.y += y
+
+        print("Called!", self.x, self.y)
 
 class Text(View):
     def __init__(self, x: int, y: int, text: str, text_color: sdl2.SDL_Color = WHITE):
@@ -159,3 +186,55 @@ class Button(View):
             return True
 
         return False
+
+    def update_position(self, x: int, y: int) -> None:
+        super().update_position(x, y)
+        self.rect.x += x
+        self.rect.y += y
+
+# ██      ██ ████ ██    ██ ████████   ███████  ██      ██  ██████
+# ██  ██  ██  ██  ███   ██ ██     ██ ██     ██ ██  ██  ██ ██    ██
+# ██  ██  ██  ██  ████  ██ ██     ██ ██     ██ ██  ██  ██ ██
+# ██  ██  ██  ██  ██ ██ ██ ██     ██ ██     ██ ██  ██  ██  ██████
+# ██  ██  ██  ██  ██  ████ ██     ██ ██     ██ ██  ██  ██       ██
+# ██  ██  ██  ██  ██   ███ ██     ██ ██     ██ ██  ██  ██ ██    ██
+#  ███  ███  ████ ██    ██ ████████   ███████   ███  ███   ██████
+
+class Window:
+    def __init__(self, name: str, view: View, x: int, y: int, width: int, height: int,
+                 color: sdl2.SDL_Color = BLACK, titlebar_color: sdl2.SDL_Color = TERTIARY):
+        """Initializes a new window.
+
+        :param name: The title to display on the titlebar (not implemented yet)
+        :param view: The base view for the window to display
+        :param x: The initial x position of the window
+        :param y: The initial y position of the window
+        :param width: The width of the window
+        :param height: The height of the window
+        :param color: The color of the window
+        """
+
+        self.text = Text(x + 4, y + 2, name) # type: Text
+        self.view = view # type: View
+        self.x = x # type: int
+        self.y = y # type: int
+        self.width = width # type: int
+        self.height = height # type: int
+        self.color = color # type: sdl2.SDL_Color
+        self.titlebar_color = titlebar_color # type: sdl2.SDL_Color
+
+        self.update_position(self.x, self.y + 20)
+
+    def draw(self, renderer: sdl2.ext.Renderer, font: sdl2.sdlttf.TTF_Font) -> None:
+        titlebar = sdl2.SDL_Rect(self.x, self.y, self.width, 20)
+        renderer.fill(titlebar, self.titlebar_color)
+
+        self.text.draw(renderer, font)
+
+        rect = sdl2.SDL_Rect(self.x, self.y + 20, self.width, self.height)
+        renderer.fill(rect, self.color)
+
+        self.view.draw(renderer, font)
+
+    def update_position(self, x: int, y: int) -> None:
+        self.view.update_position(x, y)

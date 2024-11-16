@@ -25,7 +25,8 @@ def render_text(text, x, y, color=bv.WHITE):
     sdl2.SDL_DestroyTexture(texture)
 
 button = bv.Button(10, 10, 50, 15, "Button", callback=bv.test_callback)
-text = bv.Text(10, 30, "Hello, world!")
+window = bv.Window("Window", button, 10, 10, 100, 100, bv.PRIMARY)
+
 running = True
 while running:
     events = sdl2.ext.get_events()
@@ -39,8 +40,7 @@ while running:
 
     renderer.clear()
 
-    button.draw(renderer, font)
-    text.draw(renderer, font)
+    window.draw(renderer, font)
 
     renderer.present()
 
