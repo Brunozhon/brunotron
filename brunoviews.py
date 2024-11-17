@@ -189,6 +189,30 @@ class Button(View):
         self.rect.x += x
         self.rect.y += y
 
+class MultiView(View):
+    def __init__(self, x: int, y: int, views: list[View]):
+        super().__init__(x, y)
+
+        self.views = views # type: list[View]
+
+    def draw(self, renderer: sdl2.ext.Renderer, font: sdl2.sdlttf.TTF_Font) -> None:
+        for view in self.views:
+            view.draw(renderer, font)
+
+    def check_clicked(self, x: int, y: int) -> bool:
+        clicked = False
+        for view in self.views:
+            clicked = clicked or view.check_clicked(x, y)
+        return clicked
+
+    def update_position(self, x: int, y: int) -> None:
+        super().update_position(x, y)
+
+        for view in self.views:
+            view.update_position(x, y)
+
+MV = MultiView
+
 # ██      ██ ████ ██    ██ ████████   ███████  ██      ██  ██████
 # ██  ██  ██  ██  ███   ██ ██     ██ ██     ██ ██  ██  ██ ██    ██
 # ██  ██  ██  ██  ████  ██ ██     ██ ██     ██ ██  ██  ██ ██
