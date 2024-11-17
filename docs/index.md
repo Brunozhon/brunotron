@@ -1,3 +1,1 @@
-# Brunotron
-
-Coming soon!
+A fictional workspace with barely any documentation.
