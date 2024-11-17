@@ -92,8 +92,6 @@ class View(ABC):
         self.x += x
         self.y += y
 
-        print("Called!", self.x, self.y)
-
 class Text(View):
     def __init__(self, x: int, y: int, text: str, text_color: sdl2.SDL_Color = WHITE):
         super().__init__(x, y)
@@ -156,7 +154,6 @@ class Button(View):
         :param renderer: An SDL renderer.
         :param font: An SDL font.
         """
-
         renderer.fill(self.rect, self.color)
         surface = sdl2.sdlttf.TTF_RenderText_Solid(font, self.label.encode(), self.text_color)
         texture = sdl2.SDL_CreateTextureFromSurface(renderer.sdlrenderer, surface)
@@ -213,7 +210,6 @@ class Window:
         :param height: The height of the window
         :param color: The color of the window
         """
-
         self.text = Text(x + 4, y + 2, name) # type: Text
         self.view = view # type: View
         self.x = x # type: int
@@ -226,6 +222,11 @@ class Window:
         self.update_position(self.x, self.y + 20)
 
     def draw(self, renderer: sdl2.ext.Renderer, font: sdl2.sdlttf.TTF_Font) -> None:
+        """Draws a default window with a titlebar.
+
+        :param renderer: An SDL renderer.
+        :param font: An SDL font.
+        """
         titlebar = sdl2.SDL_Rect(self.x, self.y, self.width, 20)
         renderer.fill(titlebar, self.titlebar_color)
 
