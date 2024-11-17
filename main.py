@@ -30,6 +30,8 @@ mv = bv.MV(0, 0, [button, text])
 window = bv.Window("Window", mv, 10, 10, 100, 100, bv.PRIMARY)
 
 running = True
+dragging_window = None
+
 while running:
     events = sdl2.ext.get_events()
     for event in events:
@@ -37,8 +39,17 @@ while running:
             running = False
         elif event.type == sdl2.SDL_MOUSEBUTTONDOWN:
             x, y = event.button.x, event.button.y
-            print(x, y)
-            button.check_clicked(x, y)
+            if not window.view.check_clicked(x, y):
+                if window.titlebar_clicked(x, y):
+                    dragging_window = window
+                    dragging_window.move_to(x, y)
+        elif sdl2.SDL_GetMouseState(None, None) & sdl2.SDL_BUTTON_LMASK:
+            x, y = event.button.x, event.button.y
+            if dragging_window and dragging_window.titlebar_clicked(x, y):
+                dragging_window.move_to(x, y)
+        elif event.type == sdl2.SDL_MOUSEBUTTONUP:
+            dragging_window = None
+            window.view.unclick()
 
     renderer.clear()
 

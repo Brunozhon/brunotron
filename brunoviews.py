@@ -6,6 +6,9 @@ import sdl2.sdlttf
 from abc import ABC, abstractmethod
 from typing import Callable
 
+SCREEN_WIDTH = 512
+SCREEN_HEIGHT = 384
+
 #  ██████   ███████  ██        ███████  ████████   ██████
 # ██    ██ ██     ██ ██       ██     ██ ██     ██ ██    ██
 # ██       ██     ██ ██       ██     ██ ██     ██ ██
@@ -89,8 +92,20 @@ class View(ABC):
         :param x: The offset X position.
         :param y: The offset Y position.
         """
+        print(x, y)
         self.x += x
         self.y += y
+
+    def unclick(self) -> None:
+        """Tells a button that it isn't clicked anymore.
+
+        You only need to implement this function if:
+
+        - The element you're implementing is button-like
+
+        - The element you're implementing is a container view
+        """
+        pass
 
 class Text(View):
     def __init__(self, x: int, y: int, text: str, text_color: sdl2.SDL_Color = WHITE):
@@ -123,11 +138,14 @@ class Text(View):
         """
         return False
 
+T = Text
+
 class Button(View):
     """A class for drawing button views."""
 
     def __init__(self, x: int, y: int, width: int, height: int, label: str,
                  color: sdl2.SDL_Color = SECONDARY, text_color: sdl2.SDL_Color = WHITE,
+                 hover_color: sdl2.SDL_Color = TERTIARY,
                  callback: Callable[[], None] = default_callback):
         """Initializes a button.
 
@@ -147,6 +165,10 @@ class Button(View):
         self.color = color # type: sdl2.SDL_Color
         self.text_color = text_color # type: sdl2.SDL_Color
         self.callback = callback # type: Callable[[], None]
+        self.hover_color = hover_color # type: sdl2.SDL_Color
+
+        self.curr_color = color # type: sdl2.SDL_Color
+        self.clicked = False
 
     def draw(self, renderer: sdl2.ext.Renderer, font: sdl2.sdlttf.TTF_Font) -> None:
         """Draws the button to the screen.
@@ -154,7 +176,7 @@ class Button(View):
         :param renderer: An SDL renderer.
         :param font: An SDL font.
         """
-        renderer.fill(self.rect, self.color)
+        renderer.fill(self.rect, self.curr_color)
         surface = sdl2.sdlttf.TTF_RenderText_Solid(font, self.label.encode(), self.text_color)
         texture = sdl2.SDL_CreateTextureFromSurface(renderer.sdlrenderer, surface)
         text_rect = sdl2.SDL_Rect(
@@ -178,16 +200,26 @@ class Button(View):
         """
 
         if self.rect.x <= x <= self.rect.x + self.rect.w and \
-            self.rect.y <= y <= self.rect.y + self.rect.h:
+            self.rect.y <= y <= self.rect.y + self.rect.h and \
+                not self.clicked:
             self.callback()
+            self.curr_color = self.hover_color
+            self.clicked = True
             return True
 
         return False
+
+    def unclick(self) -> None:
+        """Makes the button change its color to its default color."""
+        self.curr_color = self.color
+        self.clicked = False
 
     def update_position(self, x: int, y: int) -> None:
         super().update_position(x, y)
         self.rect.x += x
         self.rect.y += y
+
+B = Button
 
 class MultiView(View):
     def __init__(self, x: int, y: int, views: list[View]):
@@ -210,6 +242,10 @@ class MultiView(View):
 
         for view in self.views:
             view.update_position(x, y)
+
+    def unclick(self) -> None:
+        for view in self.views:
+            view.unclick()
 
 MV = MultiView
 
@@ -234,7 +270,7 @@ class Window:
         :param height: The height of the window
         :param color: The color of the window
         """
-        self.text = Text(x + 4, y + 2, name) # type: Text
+        self.text = Text(x + 5, y + 2, name) # type: Text
         self.view = view # type: View
         self.x = x # type: int
         self.y = y # type: int
@@ -242,8 +278,7 @@ class Window:
         self.height = height # type: int
         self.color = color # type: sdl2.SDL_Color
         self.titlebar_color = titlebar_color # type: sdl2.SDL_Color
-
-        self.update_position(self.x, self.y + 20)
+        self.view.update_position(x, y + 20)
 
     def draw(self, renderer: sdl2.ext.Renderer, font: sdl2.sdlttf.TTF_Font) -> None:
         """Draws a default window with a titlebar.
@@ -263,3 +298,21 @@ class Window:
 
     def update_position(self, x: int, y: int) -> None:
         self.view.update_position(x, y)
+        self.text.update_position(x, y)
+
+    def titlebar_clicked(self, x: int, y: int) -> bool:
+        if self.x - 3 <= x <= self.x + self.width and \
+                self.y - 3 <= y <= self.y + 20:
+            return True
+
+        return False
+
+    def move_to(self, x: int, y: int) -> None:
+        old_x = self.x
+        old_y = self.y
+
+        self.x = min(max(0, x), SCREEN_WIDTH - self.width)
+        self.y = min(max(0, y), SCREEN_HEIGHT - self.height - 20)
+
+        print(self.x, self.y)
+        self.update_position(self.x - old_x, self.y - old_y)
