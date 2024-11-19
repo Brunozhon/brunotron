@@ -3,8 +3,11 @@
 import sdl2
 import sdl2.ext
 import sdl2.sdlttf
+import sdl2.sdlimage
 from abc import ABC, abstractmethod
 from typing import Callable
+
+windows = []
 
 SCREEN_WIDTH = 512
 SCREEN_HEIGHT = 384
@@ -271,6 +274,7 @@ class Window:
         :param color: The color of the window
         """
         self.text = Text(x + 5, y + 2, name) # type: Text
+        self.close_button = Button(x + width - 20, y, 20, 20, "X", callback=self.request_close) # type: Button
         self.view = view # type: View
         self.x = x # type: int
         self.y = y # type: int
@@ -278,6 +282,7 @@ class Window:
         self.height = height # type: int
         self.color = color # type: sdl2.SDL_Color
         self.titlebar_color = titlebar_color # type: sdl2.SDL_Color
+        self.req_close = False # type: bool
         self.view.update_position(x, y + 20)
 
     def draw(self, renderer: sdl2.ext.Renderer, font: sdl2.sdlttf.TTF_Font) -> None:
@@ -290,6 +295,7 @@ class Window:
         renderer.fill(titlebar, self.titlebar_color)
 
         self.text.draw(renderer, font)
+        self.close_button.draw(renderer, font)
 
         rect = sdl2.SDL_Rect(self.x, self.y + 20, self.width, self.height)
         renderer.fill(rect, self.color)
@@ -299,20 +305,62 @@ class Window:
     def update_position(self, x: int, y: int) -> None:
         self.view.update_position(x, y)
         self.text.update_position(x, y)
+        self.close_button.update_position(x, y)
 
     def titlebar_clicked(self, x: int, y: int) -> bool:
-        if self.x - 3 <= x <= self.x + self.width and \
-                self.y - 3 <= y <= self.y + 20:
+        if self.x - 5 <= x <= self.x + self.width and \
+                self.y - 5 <= y <= self.y + 20:
             return True
 
         return False
 
     def move_to(self, x: int, y: int) -> None:
-        old_x = self.x
-        old_y = self.y
+        if not self.close_button.check_clicked(x, y):
+            old_x = self.x
+            old_y = self.y
 
-        self.x = min(max(0, x), SCREEN_WIDTH - self.width)
-        self.y = min(max(0, y), SCREEN_HEIGHT - self.height - 20)
+            self.x = min(max(0, x), SCREEN_WIDTH - self.width)
+            self.y = min(max(0, y), SCREEN_HEIGHT - self.height - 20)
 
-        print(self.x, self.y)
-        self.update_position(self.x - old_x, self.y - old_y)
+            self.update_position(self.x - old_x, self.y - old_y)
+
+    def unclick(self) -> None:
+        self.view.unclick()
+        self.close_button.unclick()
+
+    def request_close(self) -> None:
+        self.req_close = True
+
+class App:
+    def __init__(self, window: Window, icon_path: str, icon_x: int, icon_y: int):
+        self.window = window # type: Window
+        self.window_open = False # type: bool
+        self.icon_path = icon_path # type: str
+        self.icon_x = icon_x # type: int
+        self.icon_y = icon_y # type: int
+
+    def draw_icon(self, renderer: sdl2.ext.Renderer) -> None:
+        rect = sdl2.SDL_Rect(self.icon_x, self.icon_y, 16, 16)
+        surface = sdl2.sdlimage.IMG_Load(self.icon_path.encode())
+        texture = sdl2.SDL_CreateTextureFromSurface(renderer.sdlrenderer, surface)
+        sdl2.SDL_FreeSurface(surface)
+        sdl2.SDL_RenderCopy(renderer.sdlrenderer, texture, None, rect)
+        sdl2.SDL_DestroyTexture(texture)
+
+        if self.window.req_close:
+            self.window.req_close = False
+            self.close()
+
+    def launch(self) -> None:
+        if not self.window in windows:
+            windows.append(self.window)
+
+    def close(self):
+        if self.window in windows:
+            windows.remove(self.window)
+
+    def is_clicked(self, x, y) -> bool:
+        return self.icon_x <= x <= self.icon_x + 16 and \
+            self.icon_y <= y <= self.icon_y + 16
+
+
